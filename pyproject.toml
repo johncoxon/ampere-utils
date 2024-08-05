@@ -19,7 +19,8 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dependencies = [
-
+    "matplotlib",
+    "numpy"
 ]
 dynamic = ["version"]
 
