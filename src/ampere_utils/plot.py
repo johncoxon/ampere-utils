@@ -2,6 +2,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
+from matplotlib.quiver import Quiver
 from matplotlib.ticker import FuncFormatter, MultipleLocator
 
 
@@ -65,7 +66,7 @@ def configure_polar_plot(ax, rmax, colat_grid_spacing=10, mlt=True, theta_range=
     ax.yaxis.set_major_locator(MultipleLocator(colat_grid_spacing))
 
     # Check if the plot is a quiver plot.
-    is_quiver = np.array([isinstance(c, plt.Quiver) for c in ax.axes.get_children()]).any()
+    is_quiver = np.array([isinstance(c, Quiver) for c in ax.axes.get_children()]).any()
 
     # If it is a quiver, check whether theta_zero_location is consistent and throw an error if it isn't.
     if is_quiver:
