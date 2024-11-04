@@ -255,3 +255,50 @@ def polar_plot(mlt, colat, data, hemisphere, ax, title=None, cmap="RdBu_r", vmin
                          coordinate_labels=coordinate_labels, mlt=(not longitude))
 
     return mesh
+
+
+def polar_quiver(ax, colat, longitude, north, east, hemisphere, theta_zero_location=0, theta_reversed=False, **kwargs):
+    """
+    Plot a quiver plot that works on a polar axis.
+
+    Parameters
+    ----------
+    ax : matplotlib.projections.polar.PolarAxes
+    colat : np.ndarray
+        Colatitudes at which to plot arrows, in degrees.
+    longitude : np.ndarray
+        Longitudes at which to plot arrows, in radians.
+    north, east : np.ndarray
+        The northward and eastward vector components.
+    hemisphere : basestring
+    theta_zero_location : float, optional, default 0
+        The longitude which is pointing down the page, in degrees. (This is the same quantity as that set by
+        configure_polar_plot, and should not be different to that quantity.)
+    theta_reversed : bool, optional, default False
+        Set this to reverse the theta direction (for non-Glass Earth projections).
+
+    Returns
+    -------
+    q : matplotlib.quiver.Quiver
+    """
+    if theta_reversed:
+        longitude_corrected = longitude * -1
+        east_corrected = east * -1
+        ax.set_theta_direction(-1)
+    else:
+        longitude_corrected = longitude
+        east_corrected = east
+
+    if hemisphere == "north":
+        local_angle = np.degrees(np.arctan2(-north, east_corrected)) + longitude_corrected - theta_zero_location
+        colat_plot = colat
+        ax.yaxis.set_major_formatter(format_north_colatitude())
+    else:
+        local_angle = np.degrees(np.arctan2(north, east_corrected)) + longitude_corrected - theta_zero_location
+        colat_plot = 180 - colat
+        ax.yaxis.set_major_formatter(format_south_colatitude())
+
+    q = ax.quiver(np.radians(longitude), colat_plot, north, east, angles=local_angle, **kwargs)
+    ax.set_theta_offset(np.radians(270 - theta_zero_location))
+
+    return q
