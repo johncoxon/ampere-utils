@@ -257,7 +257,8 @@ def polar_plot(mlt, colat, data, hemisphere, ax, title=None, cmap="RdBu_r", vmin
     return mesh
 
 
-def polar_quiver(ax, colat, longitude, north, east, hemisphere, theta_zero_location=0, theta_reversed=False, **kwargs):
+def polar_quiver(ax, colat, mlt, north, east, hemisphere, theta_zero_location=0, theta_reversed=False,
+                 longitude=False, **kwargs):
     """
     Plot a quiver plot that works on a polar axis.
 
@@ -266,8 +267,8 @@ def polar_quiver(ax, colat, longitude, north, east, hemisphere, theta_zero_locat
     ax : matplotlib.projections.polar.PolarAxes
     colat : np.ndarray
         Colatitudes at which to plot arrows, in degrees.
-    longitude : np.ndarray
-        Longitudes at which to plot arrows, in radians.
+    mlt : np.ndarray
+        MLTs at which to plot arrows.
     north, east : np.ndarray
         The northward and eastward vector components.
     hemisphere : basestring
@@ -276,11 +277,19 @@ def polar_quiver(ax, colat, longitude, north, east, hemisphere, theta_zero_locat
         configure_polar_plot, and should not be different to that quantity.)
     theta_reversed : bool, optional, default False
         Set this to reverse the theta direction (for non-Glass Earth projections).
+    longitude : bool, optional, default False
+        Set this True to pass longitudes to the routine instead of MLT.
 
     Returns
     -------
     q : matplotlib.quiver.Quiver
     """
+    if longitude:
+        lon_plot = np.radians(mlt)
+    else:
+        lon_plot = mlt * np.pi / 12
+        longitude = mlt * 15
+
     if theta_reversed:
         longitude_corrected = longitude * -1
         east_corrected = east * -1
@@ -290,7 +299,7 @@ def polar_quiver(ax, colat, longitude, north, east, hemisphere, theta_zero_locat
         east_corrected = east
 
     if hemisphere == "north":
-        local_angle = np.degrees(np.arctan2(-north, east_corrected)) + longitude_corrected - theta_zero_location
+        local_angle = np.degrees(np.arctan2(north, east_corrected)) + longitude_corrected - theta_zero_location
         colat_plot = colat
         ax.yaxis.set_major_formatter(format_north_colatitude())
     else:
@@ -298,7 +307,7 @@ def polar_quiver(ax, colat, longitude, north, east, hemisphere, theta_zero_locat
         colat_plot = 180 - colat
         ax.yaxis.set_major_formatter(format_south_colatitude())
 
-    q = ax.quiver(np.radians(longitude), colat_plot, north, east, angles=local_angle, **kwargs)
+    q = ax.quiver(lon_plot, colat_plot, north, east, angles=local_angle, **kwargs)
     ax.set_theta_offset(np.radians(270 - theta_zero_location))
 
     return q
