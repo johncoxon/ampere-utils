@@ -2,6 +2,11 @@
 import numpy as np
 
 
+def asymmetry_index(north, south):
+    """Asymmetry index between a northern quantity and a southern quantity, ranging from -1 to 1."""
+    return (north - south) / (north + south)
+
+
 def colat_and_mlt(hemisphere="north"):
     """Returns colat and mlt for plotting with pcolormesh."""
     if hemisphere == "north":
