@@ -303,7 +303,7 @@ def polar_quiver(ax, colat, mlt, north, east, hemisphere, theta_zero_location=0,
         colat_plot = colat
         ax.yaxis.set_major_formatter(format_north_colatitude())
     else:
-        local_angle = np.degrees(np.arctan2(north, east_corrected)) + longitude_corrected - theta_zero_location
+        local_angle = np.degrees(np.arctan2(-north, east_corrected)) + longitude_corrected - theta_zero_location
         colat_plot = 180 - colat
         ax.yaxis.set_major_formatter(format_south_colatitude())
 
