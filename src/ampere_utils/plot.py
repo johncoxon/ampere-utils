@@ -94,6 +94,43 @@ def configure_polar_plot(ax, rmax, colat_grid_spacing=10, mlt=True, theta_range=
     ax.grid(True)
 
 
+def draw_labels(axes, xy=(0, 1), xytext=(10, -10), transpose=False, size="x-large", **kwargs):
+    """Draws labels on each subplot in an array."""
+    if transpose:
+        shape = axes.T.shape
+    else:
+        shape = axes.shape
+
+    arange = np.arange(0, np.prod(shape))
+    labels = []
+    string = 'abcdefghijklmnopqrstuvwxyz'
+
+    for i in arange:
+        labels.append(string[i])
+
+    label_list = np.reshape(np.array(labels), shape)
+
+    for row_cnt, row in enumerate(axes):
+        try:
+            for col_cnt, ax in enumerate(row):
+                try:
+                    if transpose:
+                        label = label_list[col_cnt, row_cnt]
+                    else:
+                        label = label_list[row_cnt, col_cnt]
+                    ax.annotate(label, xy, xytext=xytext,
+                                xycoords="axes fraction", textcoords="offset points", va="top",
+                                ha="left", size=size, **kwargs)
+                except AttributeError:
+                    pass
+        except TypeError:
+            try:
+                row.annotate(label_list[row_cnt], xy, xytext=xytext, xycoords="axes fraction",
+                             textcoords="offset points", va="top", ha="left", size=size, **kwargs)
+            except AttributeError:
+                pass
+
+
 def format_mlt():
     """Return MLT in hours rather than a number of degrees when drawing axis labels."""
 
@@ -311,3 +348,13 @@ def polar_quiver(ax, colat, mlt, north, east, hemisphere, theta_zero_location=0,
     ax.set_theta_offset(np.radians(270 - theta_zero_location))
 
     return q
+
+
+def save_figure(fig, *args, title=None, **kwargs):
+    """Saves and closes a figure."""
+    if title:
+        fig.suptitle(title)
+
+    fig.savefig(*args, **kwargs)
+    plt.close(fig)
+    del fig
