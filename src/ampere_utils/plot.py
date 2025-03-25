@@ -277,7 +277,7 @@ def polar_plot(mlt, colat, data, hemisphere, ax, title=None, cmap="RdBu_r", vmin
         data_masked = data_masked.T
 
     if not vmin and not vmax:
-        vmax = np.max(np.absolute(data_masked))
+        vmax = np.nanmax(np.absolute(data_masked))
         vmin = -vmax
 
     if longitude:
