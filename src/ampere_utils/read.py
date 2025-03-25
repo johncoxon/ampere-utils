@@ -3,7 +3,8 @@ import datetime as dt
 import numpy as np
 from scipy.io import netcdf_file
 from pandas import concat, read_csv, to_datetime
-from xarray import Dataset, merge
+from pathlib import Path
+from xarray import Dataset, merge, open_mfdataset
 from . import colat_and_mlt
 
 
@@ -146,3 +147,60 @@ def ncdf_file_from_path(filepath, read_db=False, read_geo_coordinates=False):
         ncdf_dict = j_dict
 
     return ncdf_dict
+
+
+
+def xarray_from_paths(paths, drop_variables=("npnt", "kmax", "mmax", "res_deg",
+                                             "nLatGrid", "nLonGrid", "geo_cLat_deg", "geo_lon_deg", "R", "pos_geo",
+                                             "db_R", "db_T", "db_P", "db_geo",
+                                             "db_Th_Th", "db_Ph_Th", "db_Th_Ph", "db_Ph_Ph",
+                                             "del_db_R", "del_db_T", "del_db_P", "del_db_geo", "del_jPar",
+                                             "del_db_Th_Th", "del_db_Ph_Th", "del_db_Th_Ph", "del_db_Ph_Ph")):
+    """
+    Read AMPERE data to an xarray Dataset.
+
+    Parameters
+    ----------
+    paths : str or listlike of str or Path
+        Either a glob string that will identify the files, or a list of the files as strings or Path objects.
+    drop_variables : tuple, optional
+        A tuple of strings describing variables to drop from the dataset.
+    """
+    dataset = open_mfdataset(paths, combine='nested', concat_dim="nRec", drop_variables=drop_variables)
+
+    years = dataset.variables["year"].values
+    doys = dataset.variables["doy"].values
+    time = dataset.variables["time"].values
+    time_window_length = dataset.variables["avgint"].values
+
+    time_length = time.shape[0]
+
+    times = np.zeros(time_length, dtype=object)
+
+    for cnt, _ in enumerate(times):
+        # Get the year from the file.
+        if np.isnan(years[cnt]):
+            times[cnt] = np.nan
+        else:
+            times[cnt] = (dt.datetime(int(years[cnt]), 1, 1) +
+                          # Add the day of the year.
+                          dt.timedelta(days=int(doys[cnt]) - 1) +
+                          # Add the fractional hour.
+                          dt.timedelta(seconds=int(np.round(60 * 60 * time[cnt]))) +
+                          # Correct to the midpoint using the length of the window in seconds.
+                          dt.timedelta(seconds=int(time_window_length[cnt]) / 2))
+
+    dataset = dataset.assign_coords({
+        "time": times,
+        "mlt": dataset.mlt_hr.values.reshape(time_length, 24, 50)[0, :, 0],
+        "colat": dataset.cLat_deg.values.reshape(time_length, 24, 50)[0, 0, :]
+    })
+
+    for variable in dataset:
+        dataset[variable] = (("time", "mlt", "colat"), dataset[variable].values.reshape(time_length, 24, 50))
+    dataset.close()
+
+    dataset.rename(jPar="j")
+    dataset = dataset.drop_vars(("year", "doy", "avgint", "cLat_deg", "mlt_hr"))
+
+    return dataset
