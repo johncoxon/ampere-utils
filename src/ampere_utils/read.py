@@ -149,13 +149,12 @@ def ncdf_file_from_path(filepath, read_db=False, read_geo_coordinates=False):
     return ncdf_dict
 
 
-
-def xarray_from_paths(paths, drop_variables=("npnt", "kmax", "mmax", "res_deg",
-                                             "nLatGrid", "nLonGrid", "geo_cLat_deg", "geo_lon_deg", "R", "pos_geo",
-                                             "db_R", "db_T", "db_P", "db_geo",
-                                             "db_Th_Th", "db_Ph_Th", "db_Th_Ph", "db_Ph_Ph",
-                                             "del_db_R", "del_db_T", "del_db_P", "del_db_geo", "del_jPar",
-                                             "del_db_Th_Th", "del_db_Ph_Th", "del_db_Th_Ph", "del_db_Ph_Ph")):
+def xarray_dataset(paths, drop_variables=("npnt", "kmax", "mmax", "res_deg",
+                                          "nLatGrid", "nLonGrid", "geo_cLat_deg", "geo_lon_deg", "R", "pos_geo",
+                                          "db_R", "db_T", "db_P", "db_geo",
+                                          "db_Th_Th", "db_Ph_Th", "db_Th_Ph", "db_Ph_Ph",
+                                          "del_db_R", "del_db_T", "del_db_P", "del_db_geo", "del_jPar",
+                                          "del_db_Th_Th", "del_db_Ph_Th", "del_db_Th_Ph", "del_db_Ph_Ph")):
     """
     Read AMPERE data to an xarray Dataset.
 
