@@ -98,8 +98,8 @@ def plot_fft(ax, amplitude, frequency, n_interpolated, verbose=False):
     significance = l_h * fstat
 
     significant_peaks = np.where(amplitude > (significance / np.sum(l_h)))[0]
-    ax.plot(frequency, l_h / np.sum(l_h), '--', label='Red noise fit', color='C3')
-    ax.plot(frequency, significance / np.sum(l_h), '--', label='99.7% confidence', color='C1')
+    ax.plot(frequency, l_h / np.sum(l_h), label='Red noise fit', color='C3')
+    ax.plot(frequency, significance / np.sum(l_h), label='99.7% confidence', color='C1')
     ax.plot(frequency, amplitude)
 
     ax.annotate(f"{n_interpolated * 100:.1f}% data interpolated", (1, 1), (-10, -10), "axes fraction", "offset points",
@@ -107,7 +107,7 @@ def plot_fft(ax, amplitude, frequency, n_interpolated, verbose=False):
 
     if len(significant_peaks):
         for cnt, p in enumerate(significant_peaks):
-            ax.axvline(frequency[p], ls=":", color=f"C{cnt}", label=f"{1 / frequency[p]:.2f}-day period")
+            ax.axvline(frequency[p], ls="--", color=f"C{cnt}", label=f"{1 / frequency[p]:.2f}-day period")
             if verbose:
                 print(f"Periods bracketing significant peak {cnt}: {1 / frequency[p - 1]:8.3f}, "
                       f"{1 / frequency[p]:8.3f}, {1 / frequency[p + 1]:8.3f}")
