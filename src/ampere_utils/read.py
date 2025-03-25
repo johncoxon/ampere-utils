@@ -166,6 +166,10 @@ def xarray_from_paths(paths, drop_variables=("npnt", "kmax", "mmax", "res_deg",
     drop_variables : tuple, optional
         A tuple of strings describing variables to drop from the dataset.
     """
+    vars_to_drop = ("year", "doy", "avgint", "cLat_deg", "mlt_hr")
+    vars_with_one_dimension = ("npnt", "kmax", "mmax", "res_deg", "nLatGrid", "nLonGrid")
+    vars_geo = ("pos_geo", "db_geo", "del_db_geo")
+
     dataset = open_mfdataset(paths, combine='nested', concat_dim="nRec", drop_variables=drop_variables)
 
     years = dataset.variables["year"].values
@@ -190,17 +194,26 @@ def xarray_from_paths(paths, drop_variables=("npnt", "kmax", "mmax", "res_deg",
                           # Correct to the midpoint using the length of the window in seconds.
                           dt.timedelta(seconds=int(time_window_length[cnt]) / 2))
 
-    dataset = dataset.assign_coords({
-        "time": times,
-        "mlt": dataset.mlt_hr.values.reshape(time_length, 24, 50)[0, :, 0],
-        "colat": dataset.cLat_deg.values.reshape(time_length, 24, 50)[0, 0, :]
-    })
+    coordinates = {"time": times,
+                   "mlt": dataset.mlt_hr.values.reshape(time_length, 24, 50)[0, :, 0],
+                   "colat": dataset.cLat_deg.values.reshape(time_length, 24, 50)[0, 0, :]}
+
+    for variable in vars_geo:
+        if variable in dataset:
+            coordinates["component"] = ["x", "y", "z"]
+            break
+
+    dataset = dataset.assign_coords(coordinates)
 
     for variable in dataset:
-        dataset[variable] = (("time", "mlt", "colat"), dataset[variable].values.reshape(time_length, 24, 50))
+        if variable not in vars_to_drop and variable not in vars_with_one_dimension:
+            if variable in vars_geo:
+                dataset[variable] = (
+                    ("time", "mlt", "colat", "component"), dataset[variable].values.reshape(time_length, 24, 50, 3))
+            else:
+                dataset[variable] = (("time", "mlt", "colat"), dataset[variable].values.reshape(time_length, 24, 50))
     dataset.close()
 
-    dataset.rename(jPar="j")
-    dataset = dataset.drop_vars(("year", "doy", "avgint", "cLat_deg", "mlt_hr"))
+    dataset = dataset.rename(jPar="j").drop_vars(vars_to_drop)
 
     return dataset
