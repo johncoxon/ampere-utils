@@ -15,3 +15,7 @@ def colat_and_mlt(hemisphere="north"):
         colat = np.linspace(179, 130, 50)
     mlt = np.linspace(0, 23, 24)
     return colat, mlt
+
+
+def units():
+    return r"$\mathregular{\mu}$A m$^{-2}$"
