@@ -17,5 +17,4 @@ def colat_and_mlt(hemisphere="north"):
     return colat, mlt
 
 
-def units():
-    return r"$\mathregular{\mu}$A m$^{-2}$"
+j_units = r"$\mathregular{\mu}$A m$^{-2}$"
