@@ -19,7 +19,7 @@ def milan_interfaces(years, data_path):
             df = read_csv(data_path / "Milan interfaces" / filename,
                           names=["day", "time", "R1", "R1_R2_interface", "R2", "HMB", "x0", "y0", "q"],
                           header=47, sep="\\s+")
-            df.index = to_datetime(df.day.astype(str) + df.time, format="%Y%m%d%H:%S")
+            df.index = to_datetime(df.day.astype(str) + df.time, format="%Y%m%d%H:%M")
             df_list.append(df.drop(columns=["day", "time"]))
 
         df = concat(df_list)
