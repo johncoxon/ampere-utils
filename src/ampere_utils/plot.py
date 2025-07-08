@@ -6,6 +6,57 @@ from matplotlib.quiver import Quiver
 from matplotlib.ticker import FuncFormatter, MultipleLocator
 
 
+def add_cax(fig, ax, pad=0.05, width=0.01, position="right"):
+    """
+    Add a colourbar axis to a figure.
+
+    Parameters
+    ----------
+    fig : matplotlib.Figure
+    ax : numpy.ndarray[matplotlib.axes.Axes] or matplotlib.axes.Axes
+        Array of axes next to which you want a colourbar.
+    pad : float, optional, default 0.05
+        Distance of the colourbar axis from the axes.
+    width : float, optional, default 0.01
+        The width of the colourbar axis.
+    position : string, optional, default "right"
+        The position of the colourbar axis: "below" or to the "right".
+    """
+    if isinstance(ax, np.ndarray):
+        if len(ax.shape) == 1:
+            ax_bbox = ax[-1].get_position()
+            cax_bbox = ax[-1].get_position()
+
+            if position == "right":
+                cax_bbox.y1 = ax[0].get_position().y1
+            else:
+                cax_bbox.x0 = ax[0].get_position().x0
+        else:
+            ax_bbox = ax[-1, -1].get_position()
+            cax_bbox = ax[-1, -1].get_position()
+
+            if position == "right":
+                cax_bbox.y1 = ax[0, -1].get_position().y1
+            else:
+                cax_bbox.x0 = ax[-1, 0].get_position().x0
+    else:
+        ax_bbox = ax.get_position()
+        cax_bbox = ax_bbox
+
+    if position == "right":
+        cax_bbox.x0 = ax_bbox.x1 + pad
+        cax_bbox.x1 = cax_bbox.x0 + width
+    elif position == "below":
+        cax_bbox.y1 = ax_bbox.y0 - pad
+        cax_bbox.y0 = cax_bbox.y1 - width
+    else:
+        raise ValueError('Position must be "right" or "below".')
+
+    cax = fig.add_axes(cax_bbox)
+
+    return cax
+
+
 def colourmap(vmin, vmax, white, cmap="RdBu_r"):
     """
     Returns a colour map which is white between -0.2 and 0.2, depending on input vmin and vmax.
@@ -189,8 +240,8 @@ def mlt_from_j_and_colat(j, colat, mlt, ax, reverse_x_axis=False, **kwargs):
     ax.plot(colat, j, label="Data", **kwargs)
 
     # Set variables for drawing annotations and note the hour of MLT.
-    xy = {"left": [0, 1], "right": [1, 1]}
-    offset = {"left": [6, -6], "right": [-6, -6]}
+    xy = {"left": (0, 1), "right": (1, 1)}
+    offset = {"left": (6, -6), "right": (-6, -6)}
 
     if colat[0] > 90:
         text_index = "left" if reverse_x_axis else "right"
