@@ -1,9 +1,10 @@
 # encoding: utf-8
 import datetime as dt
 import numpy as np
-from scipy.io import netcdf_file
+from functools import reduce
 from pandas import concat, read_csv, to_datetime
 from pathlib import Path
+from scipy.io import netcdf_file
 from xarray import Dataset, merge, open_mfdataset
 from . import colat_and_mlt
 
@@ -16,11 +17,21 @@ def milan_interfaces(years, data_path):
 
         for year in years:
             filename = f"AMPERE_R1R2_radii_v2_{year}_{h}.txt"
-            df = read_csv(data_path / "Milan interfaces" / filename,
+            df = read_csv(data_path / "milan_interfaces" / filename,
                           names=["day", "time", "R1", "R1_R2_interface", "R2", "HMB", "x0", "y0", "q"],
                           header=47, sep="\\s+")
             df.index = to_datetime(df.day.astype(str) + df.time, format="%Y%m%d%H:%M")
-            df_list.append(df.drop(columns=["day", "time"]))
+            df = df.drop(columns=["day", "time"])
+
+            # Find times at which a row is entirely equal to zero and set it to NaN.
+            masks = []
+            for variable in ["R1", "R1_R2_interface", "R2", "HMB", "q"]:
+                masks.append(np.where(df[variable] == 0)[0])
+
+            nan_indices = reduce(np.intersect1d, masks)
+            df.iloc[nan_indices] = np.nan
+
+            df_list.append(df)
 
         df = concat(df_list)
         df["hemisphere"] = h
