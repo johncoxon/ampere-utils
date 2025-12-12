@@ -16,11 +16,13 @@ def milan_interfaces(years, data_path):
 
         for year in years:
             filename = f"AMPERE_R1R2_radii_v2_{year}_{h}.txt"
-            df = read_csv(data_path / "Milan interfaces" / filename,
+            df = read_csv(data_path / "milan_interfaces" / filename,
                           names=["day", "time", "R1", "R1_R2_interface", "R2", "HMB", "x0", "y0", "q"],
                           header=47, sep="\\s+")
             df.index = to_datetime(df.day.astype(str) + df.time, format="%Y%m%d%H:%M")
-            df_list.append(df.drop(columns=["day", "time"]))
+            df = df.drop(columns=["day", "time"])
+            df[df.eq(0).all(1)] = np.nan  # Sets any columns which are entirely zeroes to NaN.
+            df_list.append(df)
 
         df = concat(df_list)
         df["hemisphere"] = h
