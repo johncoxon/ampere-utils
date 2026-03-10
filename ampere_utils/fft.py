@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.fft import rfft, rfftfreq
 from scipy.signal import welch
-from scipy.stats import f
+from scipy.stats import f, pearsonr
 
 
 def bounds_of_period(frequencies, input_period):
@@ -77,17 +77,22 @@ def get_fft(dataset, use_fft=False, n_per_segment=None):
     else:
         n_per_segment = n
 
+    interpolated_dataset = dataset.interpolate_na(dim="time")
+
     if use_fft:
-        amplitude = np.abs(rfft(dataset.interpolate_na(dim="time"))) / n
+        amplitude = np.abs(rfft(interpolated_dataset)) / n
         frequency = rfftfreq(n_per_segment, d=1)
     else:
-        frequency, psd = welch(dataset.interpolate_na(dim="time"), window="boxcar", nperseg=n_per_segment)
+        frequency, psd = welch(interpolated_dataset, window="boxcar", nperseg=n_per_segment)
         amplitude = (psd / np.sum(psd))
 
-    return amplitude, frequency, fraction_interpolated
+    autocorrelation = pearsonr(interpolated_dataset[:-1], interpolated_dataset[1:]).statistic
+
+    return amplitude, frequency, fraction_interpolated, autocorrelation
 
 
-def plot_fft(ax, amplitude, frequency, fraction_interpolated, peaks_on_legend=True, verbose=False, noise_colour="C3",
+def plot_fft(ax, amplitude, frequency, fraction_interpolated, rho,
+             peaks_on_legend=True, lower_limit=0.0, upper_limit=1e31, verbose=False, noise_colour="C3",
              significance_colour="black", ncols=3, **kwargs):
     """
     Plot the power spectral density of the data.
@@ -101,8 +106,14 @@ def plot_fft(ax, amplitude, frequency, fraction_interpolated, peaks_on_legend=Tr
         The frequency of the PSD from get_fft.
     fraction_interpolated : float
         The fraction of the data that was interpolated.
+    rho : float
+        The lag-one autocorrelation of the data.
     peaks_on_legend : bool, optional, default True
         Whether to indicate the peaks on the legend. If set False, sets Verbose to True.
+    lower_limit : float, optional, default None
+        Don't plot values below this on the legend.
+    upper_limit : float, optional, default None
+        Don't plot values above this on the legend.
     verbose : bool, optional, default False
         Whether to print the peaks or not.
     noise_colour : string, optional, default "C3"
@@ -115,7 +126,6 @@ def plot_fft(ax, amplitude, frequency, fraction_interpolated, peaks_on_legend=Tr
         Passed to the underlying pyplot.plt call for the power spectral density.
     """
     # Construct expected red noise spectrum
-    rho = 0.5  # Red noise lag-one autocorrelation
     m = len(frequency)
     l_h = ((1 - (rho ** 2)) /
            (1 - (2 * rho * np.cos((np.arange(0, m) * np.pi) / m)) + (rho ** 2)))
@@ -137,15 +147,18 @@ def plot_fft(ax, amplitude, frequency, fraction_interpolated, peaks_on_legend=Tr
     ax.plot(frequency, significance / np.sum(l_h), label="99.7% confidence", color=significance_colour)
     ax.plot(frequency, l_h / np.sum(l_h), label="Red noise fit", color=noise_colour)
 
-    ax.annotate(f"{fraction_interpolated * 100:.1f}% data interpolated", (1, 1), (-10, -10), "axes fraction", "offset points",
-                ha="right", va="top", fontsize="x-small")
+    ax.annotate(f"{fraction_interpolated * 100:.1f}% data interpolated", (1, 1), (-10, -10), "axes fraction",
+                "offset points", ha="right", va="top", fontsize="x-small")
 
     if len(significant_peaks):
         for cnt, p in enumerate(significant_peaks):
             this_period = 1 / frequency[p]
 
             if peaks_on_legend:
-                label = f"{this_period:.2f} days"
+                if upper_limit >= this_period >= lower_limit:
+	                label = f"{this_period:.2f} days"
+                else:
+                    label = None
             else:
                 label = None
 
