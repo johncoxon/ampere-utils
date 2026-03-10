@@ -3,7 +3,7 @@ import numpy as np
 
 
 def asymmetry_index(north, south):
-    """Asymmetry index between a northern quantity and a southern quantity, ranging from -1 to 1."""
+    """Asymmetry index between a northern quantity and a southern quantity, ranging from -2 to 2."""
     return 2 * (north - south) / (north + south)
 
 
