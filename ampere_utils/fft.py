@@ -5,6 +5,17 @@ from scipy.signal import welch
 from scipy.stats import f, pearsonr
 
 
+def bounds_of_period(frequencies, input_period):
+    frequency_error = (frequencies[1] - frequencies[0]) / 2
+
+    frequency_from_period = 1 / input_period
+    period_bounds = 1 / np.array([frequency_from_period + frequency_error, frequency_from_period - frequency_error])
+
+    period_error = period_bounds - input_period
+
+    return period_error
+
+
 def check_harmonics(frequency, period):
     """
 
@@ -141,9 +152,11 @@ def plot_fft(ax, amplitude, frequency, fraction_interpolated, rho,
 
     if len(significant_peaks):
         for cnt, p in enumerate(significant_peaks):
+            this_period = 1 / frequency[p]
+
             if peaks_on_legend:
-                if upper_limit >= 1 / frequency[p] >= lower_limit:
-                    label = f"{1 / frequency[p]:.2f} days"
+                if upper_limit >= this_period >= lower_limit:
+	                label = f"{this_period:.2f} days"
                 else:
                     label = None
             else:
@@ -151,7 +164,8 @@ def plot_fft(ax, amplitude, frequency, fraction_interpolated, rho,
 
             ax.axvline(frequency[p], alpha=0.2, color="black", label=label)
             if verbose:
-                print(f"Periods bracketing significant peak {cnt}: {1 / frequency[p - 1]:8.3f}, "
-                      f"{1 / frequency[p]:8.3f}, {1 / frequency[p + 1]:8.3f}")
+                bounds = bounds_of_period(frequency, this_period)
+                print(f"Bounds of significant period {cnt}: "
+                      rf"${this_period:.2f}^{{+{bounds[1]:.2f}}}_{{{bounds[0]:.2f}}}$")
 
         ax.legend(ncols=ncols, loc="lower left")
