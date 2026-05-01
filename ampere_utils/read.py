@@ -33,12 +33,13 @@ def milan_interfaces(years, data_path):
 
             df_list.append(df)
 
-        df = concat(df_list)
-        df["hemisphere"] = h
-        df = df.set_index([df.index, "hemisphere"])
-        ds_list.append(Dataset.from_dataframe(df).rename({"level_0": "time"}))
+        dataframe = concat(df_list)
+        dataframe["hemisphere"] = h
+        dataframe = dataframe.set_index([dataframe.index, "hemisphere"])
+        
+        ds_list.append(Dataset.from_dataframe(dataframe).rename({"level_0": "time"}))
 
-    boundaries = merge(ds_list)
+    boundaries = merge(ds_list, join="outer")
 
     return boundaries
 
