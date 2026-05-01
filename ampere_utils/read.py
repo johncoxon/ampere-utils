@@ -205,8 +205,8 @@ def xarray_dataset(paths, drop_variables=("npnt", "kmax", "mmax", "res_deg",
                           dt.timedelta(seconds=int(time_window_length[cnt]) / 2))
 
     coordinates = {"time": times,
-                   "mlt": dataset.mlt_hr.values.reshape(time_length, 24, 50)[0, :, 0],
-                   "colat": dataset.cLat_deg.values.reshape(time_length, 24, 50)[0, 0, :]}
+                   "mlt": dataset.mlt_hr.values.reshape(-1, 24, 50)[0, :, 0],
+                   "colat": dataset.cLat_deg.values.reshape(-1, 24, 50)[0, 0, :]}
 
     for variable in vars_geo:
         if variable in dataset:
@@ -218,10 +218,11 @@ def xarray_dataset(paths, drop_variables=("npnt", "kmax", "mmax", "res_deg",
     for variable in dataset:
         if variable not in vars_to_drop and variable not in vars_with_one_dimension:
             if variable in vars_geo:
+                # This is fine, because we're going from 720, 1200, 3 to 720, 24, 50, 3.
                 dataset[variable] = (
-                    ("time", "mlt", "colat", "component"), dataset[variable].values.reshape(time_length, 24, 50, 3))
+                    ("time", "mlt", "colat", "component"), dataset[variable].values.reshape(720, 24, 50, 3))
             else:
-                dataset[variable] = (("time", "mlt", "colat"), dataset[variable].values.reshape(time_length, 24, 50))
+                dataset[variable] = (("time", "mlt", "colat"), dataset[variable].values.reshape(720, 24, 50))
     dataset.close()
 
     dataset = dataset.rename(jPar="j").drop_vars(vars_to_drop)

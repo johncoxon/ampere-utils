@@ -67,7 +67,7 @@ def get_fft(dataset, use_fft=False, n_per_segment=None):
         The fraction of the data that was interpolated.
     """
     n = len(dataset)
-    fraction_interpolated = np.isnan(dataset).data.sum() / n
+    fraction_interpolated = np.isnan(dataset).values.sum() / n
 
     if n_per_segment:
         if n_per_segment % 1:
