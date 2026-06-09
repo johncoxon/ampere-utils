@@ -264,8 +264,8 @@ def mlt_from_j_and_colat(j, colat, mlt, ax, reverse_x_axis=False, **kwargs):
     return ax
 
 
-def polar_plot(mlt, colat, data, hemisphere, ax, title=None, cmap="RdBu_r", vmin=None, vmax=None, white=None, rmax=50,
-               colat_grid_spacing=10, theta_range=None, coordinate_labels=True, longitude=False):
+def polar_plot(mlt, colat, data, hemisphere, ax, title=None, cmap="RdBu_r", vmin=None, vmax=None, white=None,
+               longitude=False, rmax=50, colat_grid_spacing=10, theta_range=None, coordinate_labels=True, scatter=False):
     """
     Plot current density data on a polar graph with a colour scale.
 
@@ -289,6 +289,8 @@ def polar_plot(mlt, colat, data, hemisphere, ax, title=None, cmap="RdBu_r", vmin
         The minimum and maximum of the colour bar.
     white : float, optional, default None
         The value of data beneath which the colour scale will be white.
+    longitude : bool, optional, default False
+        Set this True to pass longitudes to the routine instead of MLT.
     rmax : float, optional, default None
         Set the radial extent of the plot.
     colat_grid_spacing : int
@@ -297,8 +299,8 @@ def polar_plot(mlt, colat, data, hemisphere, ax, title=None, cmap="RdBu_r", vmin
         Maximum and minimum theta of the polar plot.
     coordinate_labels : bool, optional, default False
         Set this to suppress the colatitude and MLT tick labels.
-    longitude : bool, optional, default False
-        Set this True to pass longitudes to the routine instead of MLT.
+    scatter : bool, optional, default False
+        Set this to return a scatter plot instead of a pcolormesh plot.
 
     Returns
     -------
@@ -336,8 +338,12 @@ def polar_plot(mlt, colat, data, hemisphere, ax, title=None, cmap="RdBu_r", vmin
     else:
         lon_plot = mlt * np.pi / 12
 
-    mesh = ax.pcolormesh(lon_plot, colat_plot, data_masked, vmin=vmin, vmax=vmax,
-                         cmap=colourmap(vmin, vmax, white=white, cmap=cmap), shading="auto")
+    if scatter:
+        mesh = ax.scatter(lon_plot, colat_plot, c=data_masked, vmin=vmin, vmax=vmax,
+                          cmap=colourmap(vmin, vmax, white=white, cmap=cmap))
+    else:
+        mesh = ax.pcolormesh(lon_plot, colat_plot, data_masked, vmin=vmin, vmax=vmax,
+                             cmap=colourmap(vmin, vmax, white=white, cmap=cmap), shading="auto")
 
     configure_polar_plot(ax, rmax, colat_grid_spacing=colat_grid_spacing, theta_range=theta_range,
                          coordinate_labels=coordinate_labels, mlt=(not longitude))
