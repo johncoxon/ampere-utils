@@ -265,7 +265,8 @@ def mlt_from_j_and_colat(j, colat, mlt, ax, reverse_x_axis=False, **kwargs):
 
 
 def polar_plot(mlt, colat, data, hemisphere, ax, title=None, cmap="RdBu_r", vmin=None, vmax=None, white=None,
-               longitude=False, rmax=50, colat_grid_spacing=10, theta_range=None, coordinate_labels=True, scatter=False):
+               longitude=False, rmax=50, colat_grid_spacing=10, theta_range=None, coordinate_labels=True,
+               scatter=False, **kwargs):
     """
     Plot current density data on a polar graph with a colour scale.
 
@@ -340,10 +341,10 @@ def polar_plot(mlt, colat, data, hemisphere, ax, title=None, cmap="RdBu_r", vmin
 
     if scatter:
         mesh = ax.scatter(lon_plot, colat_plot, c=data_masked, vmin=vmin, vmax=vmax,
-                          cmap=colourmap(vmin, vmax, white=white, cmap=cmap))
+                          cmap=colourmap(vmin, vmax, white=white, cmap=cmap), **kwargs)
     else:
         mesh = ax.pcolormesh(lon_plot, colat_plot, data_masked, vmin=vmin, vmax=vmax,
-                             cmap=colourmap(vmin, vmax, white=white, cmap=cmap), shading="auto")
+                             cmap=colourmap(vmin, vmax, white=white, cmap=cmap), shading="auto", **kwargs)
 
     configure_polar_plot(ax, rmax, colat_grid_spacing=colat_grid_spacing, theta_range=theta_range,
                          coordinate_labels=coordinate_labels, mlt=(not longitude))
